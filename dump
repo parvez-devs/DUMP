@@ -1,9 +1,30 @@
-#!/data/data/com.termux/files/usr/bin/python3.14
+#!/data/data/com.termux/files/usr/bin/python3
 import os
+import platform
+import sys
+
+# ১. Git pull (যদি গিট রিপো হয়)
+if os.path.exists(".git"):
     os.system("git pull")
-os.system("chmod 777 *") 
+else:
+    print("[-] Not a git repository. Skipping git pull.")
+
+# ২. পারমিশন সেট করা
+os.system("chmod +x *") 
+
+# ৩. বিট চেক করা
+bit = platform.architecture()[0]
+
 if '64' in bit:
-    import main
+    print("[+] 64-bit device detected. Starting tool...")
+    try:
+        # main.so কে ইম্পোর্ট করার চেষ্টা
+        import main
+    except ImportError:
+        print("[-] Error: main.so could not be imported. Check if it's a valid Python extension.")
+        # বিকল্পভাবে ctypes দিয়ে লোড করা যেতে পারে:
+        # import ctypes
+        # ctypes.CDLL("./main.so")
 else:
     os.system("clear")
-    print("TOOL NOT AVAILABLE FOR 32 BIT DEVICE")
+    print("[-] TOOL NOT AVAILABLE FOR 32 BIT DEVICE")
