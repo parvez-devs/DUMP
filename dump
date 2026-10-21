@@ -12,18 +12,7 @@ bit = platform.architecture()[0]
 if '64' in bit:
     os.system("clear")
     try:
-        # main.py থাকলে এটি ইম্পোর্ট হবে
-        import main
-    except ImportError:
-        try:
-            # main.py না থাকলে main.so লোড করার চেষ্টা করবে
-            lib = ctypes.CDLL("./main.so")
-            # যদি main.so তে কোনো main() ফাংশন থাকে, তবে নিচের লাইনটি আনকমেন্ট করুন:
-            # lib.main()
-        except Exception as e:
-            print(f"[-] Error loading main.so: {e}")
-            print("[-] Ensure main.so is compiled for Termux ARM64 architecture.")
-            sys.exit()
+        import dump
 else:
     os.system("clear")
     print("[-] TOOL NOT AVAILABLE FOR 32 BIT DEVICE")
