@@ -1,27 +1,4 @@
-#!/usr/bin/env python3
-import os
-import platform
-import sys
-import ctypes
-
-os.system("git pull")
-os.system("chmod +x *") 
-
-bit = platform.architecture()[0]
-
 if '64' in bit:
     os.system("clear")
     try:
-        import dump # (এখানে dump ইম্পোর্ট করছে)
-        
-    except ImportError as e: # try এর সাথে except যুক্ত করা হলো
-        print(f"[-] Import Error: {e}")
-        print("[-] Note: If your current file is named 'dump', you cannot import dump inside itself.")
-        sys.exit()
-    except Exception as e:
-        print(f"[-] An unexpected error occurred: {e}")
-        sys.exit()
-else:
-    os.system("clear")
-    print("[-] TOOL NOT AVAILABLE FOR 32 BIT DEVICE")
-    sys.exit()
+        import dump
