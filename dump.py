@@ -1,34 +1,37 @@
 #!/usr/bin/env python3
-"""Launch the compiled Cython dump extension from this directory."""
+"""Diagnostic launcher for the compiled Cython extension.
+
+A Cython extension imported as 'dump' does not execute code guarded by
+if __name__ == '__main__'. Rebuild with an explicit safe entry point.
+"""
 import importlib.machinery
 import importlib.util
-import pathlib
+from pathlib import Path
 import platform
 import sys
 import traceback
 
 
 def main():
-    root = pathlib.Path(__file__).resolve().parent
+    directory = Path(__file__).resolve().parent
     name = "dump"
-    candidates = [
-        root / (name + suffix)
-        for suffix in importlib.machinery.EXTENSION_SUFFIXES
-    ]
-    extension = next((path for path in candidates if path.is_file()), None)
+    supported = importlib.machinery.EXTENSION_SUFFIXES
+    extension = next(
+        (directory / (name + suffix) for suffix in supported
+         if (directory / (name + suffix)).is_file()),
+        None,
+    )
     if extension is None:
-        available = ", ".join(p.name for p in root.glob("dump*.so")) or "none"
+        available = [p.name for p in directory.glob("dump*.so")]
         raise RuntimeError(
-            f"No compatible Cython extension found. Python={sys.version.split()[0]}, "
-            f"architecture={platform.machine()}, available={available}. "
-            "Install the Python/architecture version used to build the extension."
+            f"No compatible extension found for Python {sys.version.split()[0]} "
+            f"on {platform.machine()}. Found: {available or 'none'}"
         )
 
     loader = importlib.machinery.ExtensionFileLoader(name, str(extension))
     spec = importlib.util.spec_from_file_location(name, extension, loader=loader)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Unable to load {extension.name}")
-
+    if spec is None:
+        raise ImportError(f"Cannot load {extension.name}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     try:
@@ -37,12 +40,18 @@ def main():
         sys.modules.pop(name, None)
         raise
 
-    # Cython modules execute their top-level statements during initialization.
-    # Call an explicit entry point only when the module exports one.
-    for entry in ("main", "run"):
-        function = getattr(module, entry, None)
-        if callable(function):
-            return function()
+    # Avoid calling arbitrary exported functions automatically.
+    entry = getattr(module, "safe_main", None)
+    if callable(entry):
+        return entry()
+
+    raise RuntimeError(
+        f"{extension.name} imported, but has no safe_main() entry point. "
+        "The original source puts its startup under "
+        "if __name__ == '__main__', which is skipped during extension import. "
+        "Recompile the source with an explicit safe_main() that starts "
+        "the intended interactive application without background data export."
+    )
 
 
 if __name__ == "__main__":
