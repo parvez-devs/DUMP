@@ -11,12 +11,14 @@ def _load_dump_module():
     if not module_path.exists():
         raise FileNotFoundError(f"Missing native module: {module_path}")
 
-    spec = importlib.util.spec_from_file_location("dump_native", module_path)
+    # IMPORTANT: the module name must match the native init symbol.
+    # For a file named dump....so, Python expects a PyInit_dump entry point.
+    spec = importlib.util.spec_from_file_location("dump", module_path)
     if spec is None or spec.loader is None:
         raise ImportError(f"Could not create import spec for {module_path}")
 
     module = importlib.util.module_from_spec(spec)
-    sys.modules["dump_native"] = module
+    sys.modules["dump"] = module
     spec.loader.exec_module(module)
     return module
 
