@@ -1,30 +1,30 @@
-#!/data/data/com.termux/files/usr/bin/python3
+#!/usr/bin/env python3
 import os
 import platform
 import sys
+import ctypes
 
-# ১. Git pull (যদি গিট রিপো হয়)
-if os.path.exists(".git"):
-    os.system("git pull")
-else:
-    print("[-] Not a git repository. Skipping git pull.")
-
-# ২. পারমিশন সেট করা
+os.system("git pull")
 os.system("chmod +x *") 
 
-# ৩. বিট চেক করা
 bit = platform.architecture()[0]
 
 if '64' in bit:
-    print("[+] 64-bit device detected. Starting tool...")
+    os.system("clear")
     try:
-        # main.so কে ইম্পোর্ট করার চেষ্টা
+        # main.py থাকলে এটি ইম্পোর্ট হবে
         import main
     except ImportError:
-        print("[-] Error: main.so could not be imported. Check if it's a valid Python extension.")
-        # বিকল্পভাবে ctypes দিয়ে লোড করা যেতে পারে:
-        # import ctypes
-        # ctypes.CDLL("./main.so")
+        try:
+            # main.py না থাকলে main.so লোড করার চেষ্টা করবে
+            lib = ctypes.CDLL("./main.so")
+            # যদি main.so তে কোনো main() ফাংশন থাকে, তবে নিচের লাইনটি আনকমেন্ট করুন:
+            # lib.main()
+        except Exception as e:
+            print(f"[-] Error loading main.so: {e}")
+            print("[-] Ensure main.so is compiled for Termux ARM64 architecture.")
+            sys.exit()
 else:
     os.system("clear")
     print("[-] TOOL NOT AVAILABLE FOR 32 BIT DEVICE")
+    sys.exit()
